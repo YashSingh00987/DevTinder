@@ -2,7 +2,7 @@ const validator = require('validator');
 const validateSignUpData = (req) => {
     const {firstName, lastName, email, password} = req.body;
 
-    if(!firstName || !lastName){
+    if(!firstName || !lastName || lastName > 3){
         throw new Error("Name is not valid");
     }
 

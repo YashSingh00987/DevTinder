@@ -8,13 +8,13 @@ const userAuth = async (req, res, next) => {
       throw new Error("Inavlid token!!");
     }
     const decodedtoken = jwt.verify(token, "secret@123");
-    
-    const {id} = decodedtoken;
+
+    const { id } = decodedtoken;
 
     const user = await User.findById(id);
 
-    if(!user){
-        throw new Error("User not found");
+    if (!user) {
+      throw new Error("User not found");
     }
     req.user = user;
     next();
@@ -23,4 +23,4 @@ const userAuth = async (req, res, next) => {
   }
 };
 
-module.exports = {userAuth};
+module.exports = { userAuth };
