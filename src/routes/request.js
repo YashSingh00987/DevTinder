@@ -9,6 +9,7 @@ requestRouter.post(
   userAuth,
   async (req, res) => {
     try {
+      const loggedInUser = req.user;
       const fromUserId = req.user._id;
       const toUserId = req.params.toUserId;
       const status = req.params.status;
@@ -43,7 +44,10 @@ requestRouter.post(
       const data = await requestSent.save();
 
       res.json({
-        message: "Connection Request Sent Successfully",
+        message:
+          status === "interested"
+            ? `${loggedInUser.firstName} is interested in ${toUser.firstName}`
+            : `${loggedInUser.firstName} ignored ${toUser.firstName}`,
         data,
       });
     } catch (err) {
@@ -72,17 +76,17 @@ requestRouter.post(
       });
 
       if (!checkRequest) {
-        return res.status(404).json({ message: "Connection Request not found" });
+        return res
+          .status(404)
+          .json({ message: "Connection Request not found" });
       }
-
 
       checkRequest.status = status;
       const data = await checkRequest.save();
 
-      res.status(200).json({message: "Connection Requested Accepted",
-        data
-      })
-
+      res
+        .status(200)
+        .json({ message: `Connection Request ${data.status}`, data });
     } catch (err) {
       res.status(400).send("ERROR: " + err.message);
     }
