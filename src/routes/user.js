@@ -77,38 +77,33 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
 
 userRouter.get("/user/feed", userAuth, async (req, res) => {
   try {
-
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const skip = (page -1)*limit;
+    const skip = (page - 1) * limit;
     const loggedInuser = req.user;
     const feed = await ConnectionRequest.find({
       $or: [{ fromUserId: loggedInuser._id }, { toUserId: loggedInuser._id }],
+    }).select("fromUserId toUserId");
+    // .populate("fromUserId", "firstName lastName")
+    // .populate("toUserId", "firstName lastName");
+
+    const hideUserFeed = new Set();
+    feed.forEach((req) => {
+      hideUserFeed.add(req.fromUserId.toString());
+      hideUserFeed.add(req.toUserId.toString());
+    });
+
+    const userFeed = await User.find({
+      $and: [
+        { _id: { $nin: Array.from(hideUserFeed) } },
+        { _id: { $ne: loggedInuser._id } },
+      ],
     })
-      .select("fromUserId toUserId")
-      // .populate("fromUserId", "firstName lastName")
-      // .populate("toUserId", "firstName lastName");
+      .select("firstName lastName about gender skills age photoUrl")
+      .skip(skip)
+      .limit(limit);
 
-
-      const hideUserFeed = new Set();
-      feed.forEach(req => {
-        hideUserFeed.add(req.fromUserId.toString());
-        hideUserFeed.add(req.toUserId.toString());
-
-      })
-
-      
-
-      const userFeed = await User.find({
-        $and:[
-          {_id: { $nin : Array.from(hideUserFeed)}},
-          {_id: {$ne: loggedInuser._id}}
-        ]
-      }).select("firstName lastName about gender skills age").skip(skip).limit(limit);
-
-
-
-      res.send(userFeed);
+    res.send(userFeed);
   } catch (err) {
     res.status(400).send("ERROR: " + err.message);
   }
